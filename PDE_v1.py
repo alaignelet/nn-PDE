@@ -73,9 +73,9 @@ class NeuralNet(nn.Module):
             raise NotImplementedError
 
     def train(self, feedDict, lossFunction, iterations):
-        xInt = Variable(torch.from_numpy(feedDict['xInt']))
-        xBound = Variable(torch.from_numpy(feedDict['xBound']))
-        boundaryCondition = Variable(torch.from_numpy(feedDict['boundaryCondition']))
+        xInt = torch.from_numpy(feedDict['xInt'])
+        xBound = torch.from_numpy(feedDict['xBound'])
+        boundaryCondition = torch.from_numpy(feedDict['boundaryCondition'])
 
         # default parameters to be customed
         optimizer = torch.optim.LBFGS(
@@ -96,11 +96,10 @@ class NeuralNet(nn.Module):
             return loss
 
         for epoch in range(iterations):
-            print(epoch)
             yInt = self.model(xInt.float())
             yBound = self.model(xBound.float())
             optimizer.step(closure)
-
+            print(epoch, loss)
         return loss
 
     def predict(self, feedDict):
@@ -215,7 +214,7 @@ class LaplaceBase(PDENeuralNetwork):
         # for Laplace operator, take the trace of the hessian
         gradients = [torch.trace(self.network.PartialDerivative(xInt[i,:].float(), order=2))
                      for i in range(xInt.shape[0])]
-        lossInt = torch.mean(torch.square(torch.FloatTensor(gradients)))
+        lossInt = torch.mean(torch.square(torch.FloatTensor(gradients))) #this may be wrong for computational graph
         lossBound = torch.mean(torch.square(yBound - boundaryCondition))
 
         return lossInt, lossBound
