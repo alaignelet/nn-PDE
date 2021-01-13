@@ -67,14 +67,14 @@ class NeuralNet(nn.Module):
             skip
 
         elif order == 2:
-            return torch.autograd.functional.hessian(func=self.model, inputs=x)
+            return torch.autograd.functional.hessian(func=self.model, inputs=x, create_graph=True)
 
         else:
             raise NotImplementedError
 
     def train(self, feedDict, lossFunction, iterations):
-        xInt = Variable(torch.from_numpy(feedDict['xInt']), requires_grad=True)
-        xBound = Variable(torch.from_numpy(feedDict['xBound']), requires_grad=True)
+        xInt = Variable(torch.from_numpy(feedDict['xInt']))
+        xBound = Variable(torch.from_numpy(feedDict['xBound']))
         boundaryCondition = Variable(torch.from_numpy(feedDict['boundaryCondition']))
 
         # default parameters to be customed
@@ -96,6 +96,7 @@ class NeuralNet(nn.Module):
             return loss
 
         for epoch in range(iterations):
+            print(epoch)
             yInt = self.model(xInt.float())
             yBound = self.model(xBound.float())
             optimizer.step(closure)
@@ -207,7 +208,7 @@ class LaplaceBase(PDENeuralNetwork):
 
         lossInt, lossBound = self.ComputeLossTerms(self.domain, xInt, yInt, yBound, boundaryCondition)
 
-        return torch.add(lossWeight*lossInt, (1-self.lossWeight)*lossBound)
+        return torch.add(self.lossWeight*lossInt, (1-self.lossWeight)*lossBound)
 
     def ComputeLossTerms(self, domain, xInt, yInt, yBound, boundaryCondition):
 
@@ -235,7 +236,7 @@ class Laplace_2d(LaplaceBase):
 if __name__=='__main__':
 
     # Create Neural Network (format is input size, hidden layer size, ..., hidden layer size, output)
-    network = NeuralNet([2, 10, 10, 1], ActivationFunction.Sigmoid)
+    network = NeuralNet([2, 10, 1], ActivationFunction.Sigmoid)
 
     # Define parameters
     interiorPointCount = 100
