@@ -93,7 +93,7 @@ class NeuralNet(nn.Module):
             optimizer = torch.optim.LBFGS(
                 params=self.model.parameters(),
                 lr=1,
-                max_iter=20, #number of iterations per iteration?
+                max_iter=20000, #number of iterations per iteration?
                 max_eval=None,
                 tolerance_grad=1e-07,
                 tolerance_change=1e-09,
@@ -110,7 +110,7 @@ class NeuralNet(nn.Module):
                     loss = lossFunction(xInt, yInt, yBound, yBoundCondition)
                     if loss.requires_grad:
                         loss.backward()
-                    if epoch % 1000 == 0:
+                    if epoch % 100 == 0:
                         print('%d / %d, loss:%.2e' %(epoch, iterations, loss))
                     return loss
 
@@ -250,7 +250,6 @@ if __name__=='__main__':
     interiorPointCount = 100
     boundaryPointCount = 100
     lossWeight = 0.5
-    iterations = 20000
 
     network = NeuralNet([2, 20, 1], ActivationFunction.Sigmoid)
     laplace = Laplace_2d(frequency=2*np.pi, lossWeight=lossWeight, network=network)
@@ -276,6 +275,8 @@ if __name__=='__main__':
     '''
 
     # LBFGS optimizer
+    iterations = 200
+
     laplace = Laplace_2d(frequency=2*np.pi, lossWeight=lossWeight, network=network)
     laplace.train(interiorPointCount, boundaryPointCount, lossWeight, iterations,gradientDescent=False)
     error2 = laplace.predict(interiorPointCount, boundaryPointCount, lossWeight)
@@ -283,4 +284,5 @@ if __name__=='__main__':
 
     plt.plot(np.linspace(0, 1, 100), laplace.network.model(torch.tensor([np.zeros(100), np.linspace(0, 1, 100)]).T.float()).detach(), label='pred')
     plt.plot(np.linspace(0, 1, 100), laplace.analyticalSolution(torch.tensor([np.zeros(100), np.linspace(0, 1, 100)])), label='true')
-    plt.legend();
+    plt.legend()
+    plt.show()
